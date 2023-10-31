@@ -1,4 +1,5 @@
 from django.db.models import Count
+from django.http import Http404
 from taskAPI.models import Project
 
 
@@ -54,6 +55,16 @@ async def search_param_for_post(parameters):
 
 
 async def search_for_wid(w_id):
-    search_request = ((await Project.objects.async_filter(w_id=w_id))
-                      .values('unit', 'utype', 'beds', 'area', 'price', 'date'))
-    return search_request
+    try:
+        search_request = await Project.objects.async_get(w_id=w_id)
+        result = {
+            'unit': search_request.unit,
+            'utype': search_request.utype,
+            'beds': search_request.beds,
+            'area': search_request.area,
+            'price': search_request.price,
+            'date': search_request.date
+        }
+        return result
+    except Project.DoesNotExist:
+        raise Http404("Project not found")

@@ -1,5 +1,7 @@
-from django.http import JsonResponse
-from .serializer import ProjectSerializer, UnitSerializer, AllSerializer, SearchSerializer
+from asgiref.sync import sync_to_async
+from django.db import IntegrityError
+from django.http import JsonResponse, Http404
+from .serializer import ProjectSerializer, UnitSerializer, AllSerializer, SearchSerializer, InsertProjectsSerializer
 from adrf.views import APIView
 from taskAPI import repository
 
@@ -57,6 +59,7 @@ class SearchProject(APIView):
             serializer = SearchSerializer(search_request, many=True)
             data = serializer.data
             return JsonResponse(data, safe=False)
+        raise Http404("Project not Found")
 
 
 class SearchParamProject(APIView):
@@ -69,6 +72,7 @@ class SearchParamProject(APIView):
             serializer = SearchSerializer(search_request, many=True)
             data = serializer.data
             return JsonResponse(data, safe=False)
+        raise Http404("Project not found")
 
 
 class SearchPostProject(APIView):
@@ -79,15 +83,29 @@ class SearchPostProject(APIView):
             serializer = SearchSerializer(search_request, many=True)
             data = serializer.data
             return JsonResponse(data, safe=False)
+        raise Http404("Project not found")
 
 
 class SearchWid(APIView):
     async def get(self, request, w_id):
-        search_request = await repository.search_for_wid(w_id)
+        search_request = await repository.search_for_wid(w_id=w_id)
         if search_request:
-            serializer = SearchSerializer(search_request, many=True)
+            serializer = SearchSerializer(search_request)
             data = serializer.data
             return JsonResponse(data, safe=False)
-        return JsonResponse({'message': 'No projects found.'})
 
 
+class InsertUnit(APIView):
+    @sync_to_async
+    def insert_projects(self, data):
+        try:
+            insert_unit = InsertProjectsSerializer(data=data)
+            insert_unit.is_valid(raise_exception=True)
+            insert_unit.save()
+            return {'post': insert_unit.data}
+        except IntegrityError:
+            return {'error': 'w_id already exists'}
+
+    async def put(self, request):
+        data = await self.insert_projects(request.data)
+        return JsonResponse(data)

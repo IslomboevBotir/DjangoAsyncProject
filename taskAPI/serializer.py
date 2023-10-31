@@ -38,3 +38,19 @@ class SearchSerializer(serializers.Serializer):
     class Meta:
         model = Project
         fields = ['unit', 'utype', 'beds', 'area', 'price', 'date']
+
+
+class InsertProjectsSerializer(serializers.Serializer):
+    cid = serializers.IntegerField()
+    unit = serializers.CharField(max_length=255)
+    w_id = serializers.IntegerField()
+    utype = serializers.CharField(max_length=255)
+    beds = serializers.IntegerField()
+    area = serializers.FloatField()
+    price = serializers.IntegerField()
+    date = serializers.DateField()
+    is_mode = serializers.BooleanField(allow_null=True)
+    is_del = serializers.BooleanField(allow_null=True)
+
+    def create(self, validated_data):
+        return Project.objects.create(**validated_data)

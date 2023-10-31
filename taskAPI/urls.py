@@ -11,5 +11,5 @@ urlpatterns = [
     path('search-param', views.SearchParamProject.as_view()),
     path('searchp', views.SearchPostProject.as_view()),
     path('searchwid/<w_id>/', views.SearchWid.as_view()),
-
+    path('insertunit/', views.InsertUnit.as_view()),
 ]
